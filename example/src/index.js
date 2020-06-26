@@ -2,6 +2,14 @@ import * as React from "react";
 import { debounce } from "lodash";
 import ReactDOM from "react-dom";
 import Editor from "../../src";
+// For custom component to render in markdown
+import CustomBlockquote from '../components/CustomBlockquote'
+import Dropzone from '../components/dropzone'
+import { DocumentIcon } from 'outline-icons'
+const SSR = typeof window === 'undefined'
+const isMac = !SSR && window.navigator.platform === 'MacIntel'
+const mod = isMac ? '⌘' : 'ctrl'
+// --------------------------end------------------------------
 
 const element = document.getElementById("main");
 const savedText = localStorage.getItem("saved");
@@ -101,6 +109,20 @@ class Example extends React.Component {
         <br />
         <Editor
           id="example"
+          // Custom component
+          customComponents={[
+            new CustomBlockquote()
+          ]}
+          menuUi={[
+            {
+              name: 'blockquote_custom',
+              title: 'Custom Blockquote',
+              icon: DocumentIcon,
+              shortcut: `${mod} [`,
+              keywords: 'custom blockquote',
+            }
+          ]}
+          // end custom component props
           readOnly={this.state.readOnly}
           value={this.state.value}
           defaultValue={defaultValue}

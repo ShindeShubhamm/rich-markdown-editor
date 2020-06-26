@@ -1,4 +1,3 @@
-/* eslint no-use-before-define: 2 */ // --> ON
 import {
   BlockQuoteIcon,
   BulletedListIcon,
@@ -12,7 +11,6 @@ import {
   TodoListIcon,
   ImageIcon,
   LinkIcon,
-  DocumentIcon,
 } from 'outline-icons'
 import { MenuItem } from '../types'
 
@@ -110,13 +108,6 @@ export default function blockMenuItems(): MenuItem[] {
       icon: LinkIcon,
       shortcut: `${mod} k`,
       keywords: 'link url uri href',
-    },
-    {
-      name: 'blockquote_custom',
-      title: 'Custom Blockquote',
-      icon: DocumentIcon,
-      shortcut: `${mod} [`,
-      keywords: 'custom blockquote',
     },
   ]
 }

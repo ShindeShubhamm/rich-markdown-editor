@@ -1,6 +1,6 @@
 import { wrappingInputRule } from 'prosemirror-inputrules'
-import Node from './Node'
-import toggleWrap from '../commands/toggleWrap'
+import Node from '../../src/nodes/Node'
+import toggleWrap from '../../src/commands/toggleWrap'
 
 export default class CustomBlockquote extends Node {
   get name() {
@@ -11,8 +11,8 @@ export default class CustomBlockquote extends Node {
     return {
       content: 'block+',
       group: 'block',
-      parseDOM: [{ tag: 'h4' }],
-      toDOM: () => ['h4', 0],
+      parseDOM: [{ tag: 'blockquote' }],
+      toDOM: () => ['blockquote', 0],
     }
   }
 
@@ -31,7 +31,7 @@ export default class CustomBlockquote extends Node {
   }
 
   toMarkdown(state, node) {
-    state.wrapBlock('#### ', null, node, () => state.renderContent(node))
+    state.wrapBlock('> ', null, node, () => state.renderContent(node))
   }
 
   parseMarkdown() {

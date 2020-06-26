@@ -21,7 +21,6 @@ import Table from './nodes/Table'
 import TableCell from './nodes/TableCell'
 import TableHeadCell from './nodes/TableHeadCell'
 import TableRow from './nodes/TableRow'
-import CustomBlockquote from './nodes/CustomBlockquote'
 
 // marks
 import Bold from './marks/Bold'
@@ -57,7 +56,6 @@ const extensions = new ExtensionManager([
   new Link(),
   new Strikethrough(),
   new OrderedList(),
-  new CustomBlockquote(),
 ])
 
 export const schema = new Schema({

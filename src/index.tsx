@@ -45,7 +45,6 @@ import Table from './nodes/Table'
 import TableCell from './nodes/TableCell'
 import TableHeadCell from './nodes/TableHeadCell'
 import TableRow from './nodes/TableRow'
-import CustomBlockquote from './nodes/CustomBlockquote'
 
 // marks
 import Bold from './marks/Bold'
@@ -97,6 +96,8 @@ export type Props = {
   tooltip: typeof React.Component
   className?: string
   style?: Record<string, string>
+  customComponents: []
+  menuUi: []
 }
 
 type State = {
@@ -261,7 +262,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
         new Placeholder({
           placeholder: this.props.placeholder,
         }),
-        new CustomBlockquote(),
+        ...this.props.customComponents,
         ...this.props.extensions,
       ],
       this
@@ -559,6 +560,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
                   onImageUploadStop={this.props.onImageUploadStop}
                   onShowToast={this.props.onShowToast}
                   embeds={this.props.embeds}
+                  customUi={this.props.menuUi}
                 />
               </React.Fragment>
             )}

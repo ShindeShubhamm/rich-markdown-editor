@@ -1,45 +1,46 @@
-import * as React from "react";
-import { capitalize } from "lodash";
-import { Portal } from "react-portal";
-import { EditorView } from "prosemirror-view";
-import { findParentNode } from "prosemirror-utils";
-import styled from "styled-components";
-import { EmbedDescriptor, MenuItem } from "../types";
-import BlockMenuItem from "./BlockMenuItem";
-import Input from "./Input";
-import VisuallyHidden from "./VisuallyHidden";
-import getDataTransferFiles from "../lib/getDataTransferFiles";
-import insertFiles from "../commands/insertFiles";
-import getMenuItems from "../menus/block";
+import * as React from 'react'
+import { capitalize } from 'lodash'
+import { Portal } from 'react-portal'
+import { EditorView } from 'prosemirror-view'
+import { findParentNode } from 'prosemirror-utils'
+import styled from 'styled-components'
+import { EmbedDescriptor, MenuItem } from '../types'
+import BlockMenuItem from './BlockMenuItem'
+import Input from './Input'
+import VisuallyHidden from './VisuallyHidden'
+import getDataTransferFiles from '../lib/getDataTransferFiles'
+import insertFiles from '../commands/insertFiles'
+import getMenuItems from '../menus/block'
 
-const SSR = typeof window === "undefined";
+const SSR = typeof window === 'undefined'
 
 type Props = {
-  isActive: boolean;
-  commands: Record<string, any>;
-  view: EditorView;
-  search: string;
-  uploadImage?: (file: File) => Promise<string>;
-  onImageUploadStart?: () => void;
-  onImageUploadStop?: () => void;
-  onShowToast?: (message: string, id: string) => void;
-  onLinkToolbarOpen: () => void;
-  onClose: () => void;
-  embeds: EmbedDescriptor[];
-};
+  isActive: boolean
+  commands: Record<string, any>
+  view: EditorView
+  search: string
+  uploadImage?: (file: File) => Promise<string>
+  onImageUploadStart?: () => void
+  onImageUploadStop?: () => void
+  onShowToast?: (message: string, id: string) => void
+  onLinkToolbarOpen: () => void
+  onClose: () => void
+  embeds: EmbedDescriptor[]
+  customUi: MenuItem[]
+}
 
 type State = {
-  insertItem?: EmbedDescriptor;
-  left?: number;
-  top?: number;
-  bottom?: number;
-  isAbove: boolean;
-  selectedIndex: number;
-};
+  insertItem?: EmbedDescriptor
+  left?: number
+  top?: number
+  bottom?: number
+  isAbove: boolean
+  selectedIndex: number
+}
 
 class BlockMenu extends React.Component<Props, State> {
-  menuRef = React.createRef<HTMLDivElement>();
-  inputRef = React.createRef<HTMLInputElement>();
+  menuRef = React.createRef<HTMLDivElement>()
+  inputRef = React.createRef<HTMLInputElement>()
 
   state: State = {
     left: -1000,
@@ -48,11 +49,11 @@ class BlockMenu extends React.Component<Props, State> {
     isAbove: false,
     selectedIndex: 0,
     insertItem: undefined,
-  };
+  }
 
   componentDidMount() {
     if (!SSR) {
-      window.addEventListener("keydown", this.handleKeyDown);
+      window.addEventListener('keydown', this.handleKeyDown)
     }
   }
 
@@ -61,184 +62,184 @@ class BlockMenu extends React.Component<Props, State> {
       nextProps.search !== this.props.search ||
       nextProps.isActive !== this.props.isActive ||
       nextState !== this.state
-    );
+    )
   }
 
   componentDidUpdate(prevProps) {
     if (!prevProps.isActive && this.props.isActive) {
-      const position = this.calculatePosition(this.props);
+      const position = this.calculatePosition(this.props)
 
       this.setState({
         insertItem: undefined,
         selectedIndex: 0,
         ...position,
-      });
+      })
     } else if (prevProps.search !== this.props.search) {
-      this.setState({ selectedIndex: 0 });
+      this.setState({ selectedIndex: 0 })
     }
   }
 
   componentWillUnmount() {
     if (!SSR) {
-      window.removeEventListener("keydown", this.handleKeyDown);
+      window.removeEventListener('keydown', this.handleKeyDown)
     }
   }
 
   handleKeyDown = (event: KeyboardEvent) => {
-    if (!this.props.isActive) return;
+    if (!this.props.isActive) return
 
-    if (event.key === "Enter") {
-      event.preventDefault();
-      event.stopPropagation();
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      event.stopPropagation()
 
-      const item = this.filtered[this.state.selectedIndex];
+      const item = this.filtered[this.state.selectedIndex]
 
       if (item) {
-        this.insertItem(item);
+        this.insertItem(item)
       } else {
-        this.props.onClose();
+        this.props.onClose()
       }
     }
 
-    if (event.key === "ArrowUp" || (event.ctrlKey && event.key === "p")) {
-      event.preventDefault();
-      event.stopPropagation();
+    if (event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p')) {
+      event.preventDefault()
+      event.stopPropagation()
 
       if (this.filtered.length) {
-        const prevIndex = this.state.selectedIndex - 1;
-        const prev = this.filtered[prevIndex];
+        const prevIndex = this.state.selectedIndex - 1
+        const prev = this.filtered[prevIndex]
 
         this.setState({
           selectedIndex: Math.max(
             0,
-            prev && prev.name === "separator" ? prevIndex - 1 : prevIndex
+            prev && prev.name === 'separator' ? prevIndex - 1 : prevIndex
           ),
-        });
+        })
       } else {
-        this.close();
+        this.close()
       }
     }
 
     if (
-      event.key === "ArrowDown" ||
-      event.key === "Tab" ||
-      (event.ctrlKey && event.key === "n")
+      event.key === 'ArrowDown' ||
+      event.key === 'Tab' ||
+      (event.ctrlKey && event.key === 'n')
     ) {
-      event.preventDefault();
-      event.stopPropagation();
+      event.preventDefault()
+      event.stopPropagation()
 
       if (this.filtered.length) {
-        const total = this.filtered.length - 1;
-        const nextIndex = this.state.selectedIndex + 1;
-        const next = this.filtered[nextIndex];
+        const total = this.filtered.length - 1
+        const nextIndex = this.state.selectedIndex + 1
+        const next = this.filtered[nextIndex]
 
         this.setState({
           selectedIndex: Math.min(
-            next && next.name === "separator" ? nextIndex + 1 : nextIndex,
+            next && next.name === 'separator' ? nextIndex + 1 : nextIndex,
             total
           ),
-        });
+        })
       } else {
-        this.close();
+        this.close()
       }
     }
 
-    if (event.key === "Escape") {
-      this.close();
+    if (event.key === 'Escape') {
+      this.close()
     }
-  };
+  }
 
-  insertItem = item => {
+  insertItem = (item) => {
     switch (item.name) {
-      case "image":
-        return this.triggerImagePick();
-      case "embed":
-        return this.triggerLinkInput(item);
-      case "link": {
-        this.clearSearch();
-        this.props.onClose();
-        this.props.onLinkToolbarOpen();
-        return;
+      case 'image':
+        return this.triggerImagePick()
+      case 'embed':
+        return this.triggerLinkInput(item)
+      case 'link': {
+        this.clearSearch()
+        this.props.onClose()
+        this.props.onLinkToolbarOpen()
+        return
       }
       default:
-        this.insertBlock(item);
+        this.insertBlock(item)
     }
-  };
+  }
 
   close = () => {
-    this.props.onClose();
-    this.props.view.focus();
-  };
+    this.props.onClose()
+    this.props.view.focus()
+  }
 
   handleLinkInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!this.props.isActive) return;
-    if (!this.state.insertItem) return;
+    if (!this.props.isActive) return
+    if (!this.state.insertItem) return
 
-    if (event.key === "Enter") {
-      event.preventDefault();
-      event.stopPropagation();
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      event.stopPropagation()
 
-      const href = event.currentTarget.value;
-      const matches = this.state.insertItem.matcher(href);
+      const href = event.currentTarget.value
+      const matches = this.state.insertItem.matcher(href)
 
       if (!matches && this.props.onShowToast) {
         this.props.onShowToast(
           "Sorry, that link won't work for this embed type.",
-          "embed_invalid_link"
-        );
-        return;
+          'embed_invalid_link'
+        )
+        return
       }
 
       this.insertBlock({
-        name: "embed",
+        name: 'embed',
         attrs: {
           href,
           component: this.state.insertItem.component,
           matches,
         },
-      });
+      })
     }
 
-    if (event.key === "Escape") {
-      this.props.onClose();
-      this.props.view.focus();
+    if (event.key === 'Escape') {
+      this.props.onClose()
+      this.props.view.focus()
     }
-  };
+  }
 
   handleLinkInputPaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
-    if (!this.props.isActive) return;
-    if (!this.state.insertItem) return;
+    if (!this.props.isActive) return
+    if (!this.state.insertItem) return
 
-    const href = event.clipboardData.getData("text/plain");
-    const matches = this.state.insertItem.matcher(href);
+    const href = event.clipboardData.getData('text/plain')
+    const matches = this.state.insertItem.matcher(href)
 
     if (matches) {
-      event.preventDefault();
-      event.stopPropagation();
+      event.preventDefault()
+      event.stopPropagation()
 
       this.insertBlock({
-        name: "embed",
+        name: 'embed',
         attrs: {
           href,
           component: this.state.insertItem.component,
           matches,
         },
-      });
+      })
     }
-  };
+  }
 
   triggerImagePick = () => {
     if (this.inputRef.current) {
-      this.inputRef.current.click();
+      this.inputRef.current.click()
     }
-  };
+  }
 
-  triggerLinkInput = item => {
-    this.setState({ insertItem: item });
-  };
+  triggerLinkInput = (item) => {
+    this.setState({ insertItem: item })
+  }
 
-  handleImagePicked = event => {
-    const files = getDataTransferFiles(event);
+  handleImagePicked = (event) => {
+    const files = getDataTransferFiles(event)
 
     const {
       view,
@@ -246,65 +247,65 @@ class BlockMenu extends React.Component<Props, State> {
       onImageUploadStart,
       onImageUploadStop,
       onShowToast,
-    } = this.props;
-    const { state, dispatch } = view;
-    const parent = findParentNode(node => !!node)(state.selection);
+    } = this.props
+    const { state, dispatch } = view
+    const parent = findParentNode((node) => !!node)(state.selection)
 
     if (parent) {
       dispatch(
         state.tr.insertText(
-          "",
+          '',
           parent.pos,
           parent.pos + parent.node.textContent.length + 1
         )
-      );
+      )
 
       insertFiles(view, event, parent.pos, files, {
         uploadImage,
         onImageUploadStart,
         onImageUploadStop,
         onShowToast,
-      });
+      })
     }
 
-    this.props.onClose();
-  };
+    this.props.onClose()
+  }
 
   clearSearch() {
-    const { state, dispatch } = this.props.view;
-    const parent = findParentNode(node => !!node)(state.selection);
+    const { state, dispatch } = this.props.view
+    const parent = findParentNode((node) => !!node)(state.selection)
 
     if (parent) {
       dispatch(
         state.tr.insertText(
-          "",
+          '',
           parent.pos,
           parent.pos + parent.node.textContent.length + 1
         )
-      );
+      )
     }
   }
 
   insertBlock(item) {
-    this.clearSearch();
+    this.clearSearch()
 
-    const command = this.props.commands[item.name];
+    const command = this.props.commands[item.name]
     if (command) {
-      command(item.attrs);
+      command(item.attrs)
     } else {
-      this.props.commands[`create${capitalize(item.name)}`](item.attrs);
+      this.props.commands[`create${capitalize(item.name)}`](item.attrs)
     }
 
-    this.props.onClose();
+    this.props.onClose()
   }
 
   calculatePosition(props) {
-    const { view } = props;
-    const { selection } = view.state;
-    const startPos = view.coordsAtPos(selection.$from.pos);
-    const ref = this.menuRef.current;
-    const offsetHeight = ref ? ref.offsetHeight : 0;
-    const paragraph = view.domAtPos(selection.$from.pos);
+    const { view } = props
+    const { selection } = view.state
+    const startPos = view.coordsAtPos(selection.$from.pos)
+    const ref = this.menuRef.current
+    const offsetHeight = ref ? ref.offsetHeight : 0
+    const paragraph = view.domAtPos(selection.$from.pos)
 
     if (!props.isActive || !paragraph.node || SSR) {
       return {
@@ -312,11 +313,11 @@ class BlockMenu extends React.Component<Props, State> {
         top: 0,
         bottom: undefined,
         isAbove: false,
-      };
+      }
     }
 
-    const { top, left, bottom } = paragraph.node.getBoundingClientRect();
-    const margin = 24;
+    const { top, left, bottom } = paragraph.node.getBoundingClientRect()
+    const margin = 24
 
     if (startPos.top - offsetHeight > margin) {
       return {
@@ -324,73 +325,73 @@ class BlockMenu extends React.Component<Props, State> {
         top: undefined,
         bottom: window.innerHeight - top - window.scrollY,
         isAbove: false,
-      };
+      }
     } else {
       return {
         left: left + window.scrollX,
         top: bottom + window.scrollY,
         bottom: undefined,
         isAbove: true,
-      };
+      }
     }
   }
 
   get filtered() {
-    const { embeds, search = "" } = this.props;
-    let items: (EmbedDescriptor | MenuItem)[] = getMenuItems();
-    const embedItems: EmbedDescriptor[] = [];
+    const { embeds, search = '', customUi } = this.props
+    let items: (EmbedDescriptor | MenuItem)[] = getMenuItems()
+    items = [...items, ...customUi]
+    const embedItems: EmbedDescriptor[] = []
 
     for (const embed of embeds) {
       if (embed.title && embed.icon) {
         embedItems.push({
           ...embed,
-          name: "embed",
-        });
+          name: 'embed',
+        })
       }
     }
 
     if (embedItems.length) {
       items.push({
-        name: "separator",
-      });
-      items = items.concat(embedItems);
+        name: 'separator',
+      })
+      items = items.concat(embedItems)
     }
 
-    const filtered = items.filter(item => {
-      if (item.name === "separator") return true;
+    const filtered = items.filter((item) => {
+      if (item.name === 'separator') return true
 
-      const n = search.toLowerCase();
+      const n = search.toLowerCase()
       return (
-        (item.title || "").toLowerCase().includes(n) ||
-        (item.keywords || "").toLowerCase().includes(n)
-      );
-    });
+        (item.title || '').toLowerCase().includes(n) ||
+        (item.keywords || '').toLowerCase().includes(n)
+      )
+    })
 
     // this block literally just trims unneccessary separators from the results
     return filtered.reduce((acc, item, index) => {
       // trim separators from start / end
-      if (item.name === "separator" && index === 0) return acc;
-      if (item.name === "separator" && index === filtered.length - 1)
-        return acc;
+      if (item.name === 'separator' && index === 0) return acc
+      if (item.name === 'separator' && index === filtered.length - 1) return acc
 
       // trim double separators looking ahead / behind
-      const prev = filtered[index - 1];
-      if (prev && prev.name === "separator" && item.name === "separator")
-        return acc;
+      const prev = filtered[index - 1]
+      if (prev && prev.name === 'separator' && item.name === 'separator')
+        return acc
 
-      const next = filtered[index + 1];
-      if (next && next.name === "separator" && item.name === "separator")
-        return acc;
+      const next = filtered[index + 1]
+      if (next && next.name === 'separator' && item.name === 'separator')
+        return acc
 
       // otherwise, continue
-      return [...acc, item];
-    }, []);
+      return [...acc, item]
+    }, [])
   }
 
   render() {
-    const { isActive } = this.props;
-    const items = this.filtered;
-    const { insertItem, ...positioning } = this.state;
+    const { isActive } = this.props
+    const items = this.filtered
+    const { insertItem, ...positioning } = this.state
 
     return (
       <Portal>
@@ -398,8 +399,7 @@ class BlockMenu extends React.Component<Props, State> {
           id="block-menu-container"
           active={isActive}
           ref={this.menuRef}
-          {...positioning}
-        >
+          {...positioning}>
           {insertItem ? (
             <LinkInputWrapper>
               <LinkInput
@@ -407,7 +407,7 @@ class BlockMenu extends React.Component<Props, State> {
                 placeholder={
                   insertItem.title
                     ? `Paste a ${insertItem.title} link…`
-                    : "Paste a link…"
+                    : 'Paste a link…'
                 }
                 onKeyDown={this.handleLinkInputKeydown}
                 onPaste={this.handleLinkInputPaste}
@@ -417,30 +417,29 @@ class BlockMenu extends React.Component<Props, State> {
           ) : (
             <List>
               {items.map((item, index) => {
-                if (item.name === "separator") {
+                if (item.name === 'separator') {
                   return (
                     <ListItem key={index}>
                       <hr />
                     </ListItem>
-                  );
+                  )
                 }
-                const selected = index === this.state.selectedIndex && isActive;
+                const selected = index === this.state.selectedIndex && isActive
 
                 if (!item.title || !item.icon) {
-                  return null;
+                  return null
                 }
 
                 return (
-                  <ListItem key={index}>
+                  <ListItem key={index} className="handle">
                     <BlockMenuItem
                       onClick={() => this.insertItem(item)}
                       selected={selected}
                       icon={item.icon}
                       title={item.title}
-                      shortcut={item.shortcut}
-                    ></BlockMenuItem>
+                      shortcut={item.shortcut}></BlockMenuItem>
                   </ListItem>
-                );
+                )
               })}
               {items.length === 0 && (
                 <ListItem>
@@ -459,19 +458,19 @@ class BlockMenu extends React.Component<Props, State> {
           </VisuallyHidden>
         </Wrapper>
       </Portal>
-    );
+    )
   }
 }
 
 const LinkInputWrapper = styled.div`
   margin: 8px;
-`;
+`
 
 const LinkInput = styled(Input)`
   height: 36px;
   width: 100%;
-  color: ${props => props.theme.blockToolbarText};
-`;
+  color: ${(props) => props.theme.blockToolbarText};
+`
 
 const List = styled.ol`
   list-style: none;
@@ -479,40 +478,40 @@ const List = styled.ol`
   height: 100%;
   padding: 8px 0;
   margin: 0;
-`;
+`
 
 const ListItem = styled.li`
   padding: 0;
   margin: 0;
-`;
+`
 
 const Empty = styled.div`
   display: flex;
   align-items: center;
-  color: ${props => props.theme.textSecondary};
+  color: ${(props) => props.theme.textSecondary};
   font-weight: 500;
   font-size: 14px;
   height: 36px;
   padding: 0 16px;
-`;
+`
 
 export const Wrapper = styled.div<{
-  active: boolean;
-  top?: number;
-  bottom?: number;
-  left?: number;
-  isAbove: boolean;
+  active: boolean
+  top?: number
+  bottom?: number
+  left?: number
+  isAbove: boolean
 }>`
-  color: ${props => props.theme.text};
-  font-family: ${props => props.theme.fontFamily};
+  color: ${(props) => props.theme.text};
+  font-family: ${(props) => props.theme.fontFamily};
   position: absolute;
-  z-index: ${props => {
-    return props.theme.zIndex + 100;
+  z-index: ${(props) => {
+    return props.theme.zIndex + 100
   }};
-  ${props => props.top && `top: ${props.top}px`};
-  ${props => props.bottom && `bottom: ${props.bottom}px`};
-  left: ${props => props.left}px;
-  background-color: ${props => props.theme.blockToolbarBackground};
+  ${(props) => props.top && `top: ${props.top}px`};
+  ${(props) => props.bottom && `bottom: ${props.bottom}px`};
+  left: ${(props) => props.left}px;
+  background-color: ${(props) => props.theme.blockToolbarBackground};
   border-radius: 4px;
   box-shadow: rgba(0, 0, 0, 0.05) 0px 0px 0px 1px,
     rgba(0, 0, 0, 0.08) 0px 4px 8px, rgba(0, 0, 0, 0.08) 0px 2px 4px;
@@ -537,13 +536,13 @@ export const Wrapper = styled.div<{
   hr {
     border: 0;
     height: 0;
-    border-top: 1px solid ${props => props.theme.blockToolbarDivider};
+    border-top: 1px solid ${(props) => props.theme.blockToolbarDivider};
   }
 
   ${({ active, isAbove }) =>
     active &&
     `
-    transform: translateY(${isAbove ? "6px" : "-6px"}) scale(1);
+    transform: translateY(${isAbove ? '6px' : '-6px'}) scale(1);
     pointer-events: all;
     opacity: 1;
   `};
@@ -551,6 +550,6 @@ export const Wrapper = styled.div<{
   @media print {
     display: none;
   }
-`;
+`
 
-export default BlockMenu;
+export default BlockMenu
